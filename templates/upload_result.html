@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Upload Successful{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Upload successful</h2>
+    <p class="bcs-hint">
+      Enter these two codes into the game: Data Transfer -> Recover Data, to
+      receive the edited save. The codes expire after a short time.
+    </p>
+
+    <label class="form-label">Transfer Code</label>
+    <div class="bcs-code-box">{{ transfer_code }}</div>
+
+    <label class="form-label">Confirmation Code</label>
+    <div class="bcs-code-box">{{ confirmation_code }}</div>
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary mt-2">Back to Overview</a>
+  </div>
+</div>
+{% endblock %}

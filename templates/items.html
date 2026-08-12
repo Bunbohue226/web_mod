@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">{{ title }}</h2>
+    <form action="{{ url_for('items_save', key=key) }}" method="post">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr><th>Type</th><th>Quantity</th></tr>
+        </thead>
+        <tbody>
+          {% for i, (name, value) in items %}
+          <tr>
+            <td>{{ name }}</td>
+            <td><input type="number" class="form-control form-control-sm" style="width:130px;" name="value_{{ i }}" value="{{ value }}" /></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-warning">Save Changes</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

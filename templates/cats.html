@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Cats{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Bulk actions — all unlocked cats</h2>
+    <div class="d-flex flex-wrap gap-2">
+      <form action="{{ url_for('cats_bulk_true_form') }}" method="post" onsubmit="return confirm('Force True Form for EVERY unlocked cat?');">
+        <button type="submit" class="btn btn-warning">Force True Form (ALL)</button>
+      </form>
+      <form action="{{ url_for('cats_bulk_fourth_form') }}" method="post" onsubmit="return confirm('Force 4th Form for EVERY unlocked cat?');">
+        <button type="submit" class="btn btn-warning">Force 4th Form (ALL)</button>
+      </form>
+      <form action="{{ url_for('cats_bulk_talents') }}" method="post" onsubmit="return confirm('Max ALL talents for every unlocked cat?');">
+        <button type="submit" class="btn btn-warning">Max Talents (ALL)</button>
+      </form>
+    </div>
+    <p class="bcs-hint mt-2 mb-0">
+      "Force" ignores whether you've seen the cat's evolution image in-game.
+      "Max Talents" needs an internet connection to fetch real talent caps.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Cat list ({{ cats|length }})</h2>
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>ID</th><th>Unlocked</th><th>Form</th><th>Level</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in cats %}
+        <tr>
+          <td>{{ cat.id }}</td>
+          <td>{{ "Yes" if cat.unlocked else "No" }}</td>
+          <td>{{ cat.current_form }} / {{ cat.unlocked_forms }}</td>
+          <td>{{ cat.level_total }} (base {{ cat.level_base }} + plus {{ cat.level_plus }})</td>
+          <td>
+            <div class="d-flex flex-wrap gap-2">
+              {% if not cat.unlocked %}
+              <form action="{{ url_for('cats_unlock') }}" method="post">
+                <input type="hidden" name="cat_id" value="{{ cat.id }}" />
+                <button type="submit" class="btn btn-sm bcs-chip">Unlock</button>
+              </form>
+              {% endif %}
+              <form action="{{ url_for('cats_level') }}" method="post" class="bcs-inline-form">
+                <input type="hidden" name="cat_id" value="{{ cat.id }}" />
+                <input type="number" name="base" class="form-control form-control-sm" placeholder="Base" style="width:65px;" value="{{ cat.level_base + 1 }}" />
+                <input type="number" name="plus" class="form-control form-control-sm" placeholder="Plus" style="width:65px;" value="{{ cat.level_plus }}" />
+                <button type="submit" class="btn btn-sm bcs-chip">Set Level</button>
+              </form>
+              <form action="{{ url_for('cats_true_form') }}" method="post">
+                <input type="hidden" name="cat_id" value="{{ cat.id }}" />
+                <button type="submit" class="btn btn-sm bcs-chip">True Form</button>
+              </form>
+              <form action="{{ url_for('cats_fourth_form') }}" method="post">
+                <input type="hidden" name="cat_id" value="{{ cat.id }}" />
+                <button type="submit" class="btn btn-sm bcs-chip">4th Form</button>
+              </form>
+              <form action="{{ url_for('cats_delete') }}" method="post" onsubmit="return confirm('Delete cat #{{ cat.id }}?');">
+                <input type="hidden" name="cat_id" value="{{ cat.id }}" />
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

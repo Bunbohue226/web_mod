@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+
+<div class="bcs-stat-strip">
+  <div class="bcs-stat-tile">
+    <div class="label">Catfood</div>
+    <div class="value">{{ "{:,}".format(currencies.get('catfood', 0)) }}</div>
+  </div>
+  <div class="bcs-stat-tile">
+    <div class="label">XP</div>
+    <div class="value">{{ "{:,}".format(currencies.get('xp', 0)) }}</div>
+  </div>
+  <div class="bcs-stat-tile">
+    <div class="label">Rare Tickets</div>
+    <div class="value">{{ "{:,}".format(currencies.get('rare_tickets', 0)) }}</div>
+  </div>
+  <div class="bcs-stat-tile">
+    <div class="label">Leadership</div>
+    <div class="value">{{ "{:,}".format(currencies.get('leadership', 0)) }}</div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Resources</h2>
+    <div class="row g-3">
+      {% for key, label in currency_labels.items() %}
+      <div class="col-md-4 col-lg-3">
+        <div class="bcs-currency-tile">
+          <div class="name">{{ label }}</div>
+          <div class="value">{{ "{:,}".format(currencies.get(key, 0)) }}</div>
+
+          <form action="{{ url_for('currency_add') }}" method="post" class="bcs-inline-form mb-2">
+            <input type="hidden" name="key" value="{{ key }}" />
+            <input type="number" name="amount" class="form-control form-control-sm" style="width:110px;" placeholder="Amount..." />
+            <button type="submit" class="btn btn-sm bcs-chip">Add</button>
+          </form>
+
+          <form action="{{ url_for('currency_set') }}" method="post" class="bcs-inline-form">
+            <input type="hidden" name="key" value="{{ key }}" />
+            <input type="number" name="value" class="form-control form-control-sm" style="width:110px;" placeholder="Set to..." />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Bulk actions</h2>
+    <p class="bcs-hint">Apply to everything at once instead of one item at a time.</p>
+
+    <div class="d-flex flex-wrap gap-3 align-items-end">
+      <form action="{{ url_for('bulk_unlock_cats') }}" method="post" onsubmit="return confirm('Unlock EVERY cat in this save?');">
+        <button type="submit" class="btn btn-warning">Unlock ALL cats</button>
+      </form>
+
+      <form action="{{ url_for('bulk_level_cats') }}" method="post" class="bcs-inline-form" onsubmit="return confirm('Set the level of EVERY unlocked cat? This overwrites individual levels.');">
+        <span class="bcs-hint">Set level for ALL unlocked cats:</span>
+        <input type="number" name="base" class="form-control form-control-sm" placeholder="Base" style="width:80px;" required />
+        <input type="number" name="plus" class="form-control form-control-sm" placeholder="Plus" style="width:80px;" value="0" />
+        <button type="submit" class="btn btn-warning">Apply to all cats</button>
+      </form>
+    </div>
+
+    <hr class="my-3">
+
+    <form action="{{ url_for('set_playtime') }}" method="post" class="bcs-inline-form">
+      <span class="bcs-hint">Playtime:</span>
+      <input type="number" name="hours" class="form-control form-control-sm" placeholder="Hours" style="width:80px;" value="{{ playtime.hours }}" />
+      <input type="number" name="minutes" class="form-control form-control-sm" placeholder="Min" style="width:75px;" value="{{ playtime.minutes }}" />
+      <input type="number" name="seconds" class="form-control form-control-sm" placeholder="Sec" style="width:75px;" value="{{ playtime.seconds }}" />
+      <button type="submit" class="btn btn-outline-secondary">Set playtime</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Other groups</h2>
+    <div class="row g-3">
+      {% for key, label in array_items.items() %}
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('items_edit', key=key) }}">
+          <div class="title">{{ label }}</div>
+          <div class="hint">Edit quantity per type</div>
+        </a>
+      </div>
+      {% endfor %}
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('cats_list') }}">
+          <div class="title">Cats</div>
+          <div class="hint">Unlock, level, true form, talents, delete</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('story_list') }}">
+          <div class="title">Story Chapters</div>
+          <div class="hint">Complete chapters, collect treasure</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('ototo_page') }}">
+          <div class="title">Ototo / Gamototo</div>
+          <div class="hint">Engineers, base materials, cannons</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('other_maps_page') }}">
+          <div class="title">Other Maps</div>
+          <div class="hint">Gauntlets, Legend Quest, Zero Legends, Events</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Save / Sync back to account</h2>
+    <p class="bcs-hint">
+      "Save File" writes SAVE_DATA_edited into your Downloads folder (for use with adb/root if needed).<br />
+      "Upload" pushes the edited save to the server and returns a NEW Transfer/Confirmation Code —
+      enter those into the game (Data Transfer -> Recover Data) to receive the edited save.
+    </p>
+    <div class="d-flex gap-2">
+      <form action="{{ url_for('save_file') }}" method="post">
+        <button type="submit" class="btn btn-outline-secondary">Save to File</button>
+      </form>
+      <form action="{{ url_for('upload') }}" method="post">
+        <button type="submit" class="btn btn-warning">Upload &amp; Get New Codes</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Ototo{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Engineers</h2>
+    <form action="{{ url_for('ototo_engineers') }}" method="post" class="bcs-inline-form">
+      <input type="number" name="count" class="form-control form-control-sm" style="width:100px;" value="{{ engineers.current }}" />
+      <span class="bcs-hint">Max seen by game: {{ engineers.max }}</span>
+      <button type="submit" class="btn btn-warning">Set</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Base Materials</h2>
+    <form action="{{ url_for('ototo_materials') }}" method="post">
+      <table class="table table-hover align-middle">
+        <thead><tr><th>Type</th><th>Quantity</th></tr></thead>
+        <tbody>
+          {% for i, value in materials %}
+          <tr>
+            <td>Material #{{ i }}</td>
+            <td><input type="number" class="form-control form-control-sm" style="width:130px;" name="value_{{ i }}" value="{{ value }}" /></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-warning">Save Materials</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Cannons</h2>
+    {% if cannons %}
+    {% for cannon in cannons %}
+    <form action="{{ url_for('ototo_cannon') }}" method="post" class="mb-3 pb-3 bcs-cannon-row">
+      <input type="hidden" name="cannon_id" value="{{ cannon.id }}" />
+      <div class="d-flex flex-wrap gap-3 align-items-end">
+        <div>
+          <label class="form-label mb-0">Cannon #{{ cannon.id }} — development stage</label>
+          <input type="number" name="development" class="form-control form-control-sm" style="width:100px;" value="{{ cannon.development }}" />
+        </div>
+        {% for lvl in cannon.levels %}
+        <div>
+          <label class="form-label mb-0">Part {{ loop.index0 }} level</label>
+          <input type="number" name="level_{{ loop.index0 }}" class="form-control form-control-sm" style="width:90px;" value="{{ lvl }}" />
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-sm bcs-chip">Save Cannon #{{ cannon.id }}</button>
+      </div>
+    </form>
+    {% endfor %}
+    {% else %}
+    <p class="bcs-hint mb-0">No cannon data found in this save.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

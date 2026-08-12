@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Other Maps{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Complete an entire map type at once</h2>
+    <p class="bcs-hint">
+      Each button clears every stage across every difficulty for that map
+      type. This is a simple all-or-nothing action — no per-chapter or
+      treasure detail, unlike Story Chapters.
+    </p>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="bcs-currency-tile h-100 d-flex flex-column justify-content-between">
+          <div class="name mb-2">Gauntlets</div>
+          <form action="{{ url_for('other_maps_gauntlets') }}" method="post" onsubmit="return confirm('Complete EVERY Gauntlet stage at every difficulty?');">
+            <button type="submit" class="btn btn-warning w-100">Complete ALL Gauntlets</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="bcs-currency-tile h-100 d-flex flex-column justify-content-between">
+          <div class="name mb-2">Legend Quest</div>
+          <form action="{{ url_for('other_maps_legend_quest') }}" method="post" onsubmit="return confirm('Complete EVERY Legend Quest stage at every difficulty?');">
+            <button type="submit" class="btn btn-warning w-100">Complete ALL Legend Quest</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="bcs-currency-tile h-100 d-flex flex-column justify-content-between">
+          <div class="name mb-2">Zero Legends</div>
+          <form action="{{ url_for('other_maps_zero_legends') }}" method="post" onsubmit="return confirm('Complete EVERY Zero Legends stage at every difficulty?');">
+            <button type="submit" class="btn btn-warning w-100">Complete ALL Zero Legends</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="bcs-currency-tile h-100 d-flex flex-column justify-content-between">
+          <div class="name mb-2">Event Stages</div>
+          <form action="{{ url_for('other_maps_event_stages') }}" method="post" onsubmit="return confirm('Complete EVERY Event Stage group?');">
+            <button type="submit" class="btn btn-warning w-100">Complete ALL Event Stages</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

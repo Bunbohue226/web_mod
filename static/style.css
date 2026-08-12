@@ -1,0 +1,640 @@
+/* =========================================================================
+   Battle Cats Save Editor — Bootstrap 5 override theme
+   Dark background, gold/brown/red accents, subtle motion. Built on top of
+   real Bootstrap (CDN) by overriding its CSS custom properties + a thin
+   layer of custom rules, rather than writing a UI framework from scratch.
+   ========================================================================= */
+
+:root,
+[data-bs-theme="dark"] {
+  --bs-body-bg: #060a06;
+  --bs-body-color: #c8f5c8;
+  --bs-emphasis-color: #d9ffd9;
+  --bs-secondary-color: #5a9a5a;
+  --bs-border-color: #163016;
+  --bs-tertiary-bg: #0a120a;
+  --bs-secondary-bg: #081008;
+
+  --bs-primary: #39ff14;
+  --bs-primary-rgb: 57, 255, 20;
+  --bs-link-color: #5dff5d;
+  --bs-link-hover-color: #baffba;
+
+  --bs-warning: #39ff14;
+  --bs-warning-rgb: 57, 255, 20;
+  --bs-danger: #ff4d4d;
+  --bs-danger-rgb: 255, 77, 77;
+  --bs-success: #39ff14;
+  --bs-success-rgb: 57, 255, 20;
+
+  --bcs-brown: #1f4d1f;
+  --bcs-gold-bright: #7dff7d;
+
+  --bcs-mono: "Consolas", "Courier New", ui-monospace, monospace;
+
+  /* Bootstrap tự dùng các biến bán kính này cho .btn/.card/.alert/.form-control/
+     .badge/.dropdown... — ép về 0 để TOÀN BỘ giao diện vuông góc, không chỉ
+     những class tự viết riêng ở file này. */
+  --bs-border-radius: 0;
+  --bs-border-radius-sm: 0;
+  --bs-border-radius-lg: 0;
+  --bs-border-radius-xl: 0;
+  --bs-border-radius-xxl: 0;
+  --bs-border-radius-pill: 0;
+}
+
+body {
+  background: radial-gradient(circle at top, #0a140a 0%, #060a06 60%) fixed;
+  min-height: 100vh;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.bcs-brand,
+.card h2,
+.card > .card-body > .card-title,
+.btn,
+.bcs-code-box,
+.value {
+  font-family: var(--bcs-mono);
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ---------- Layout: sidebar + main ---------- */
+
+.bcs-sidebar {
+  width: 230px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d1f0d, #050a05);
+  border-right: 2px solid var(--bs-primary);
+  position: sticky;
+  top: 0;
+}
+
+.bcs-brand {
+  font-weight: 700;
+  color: var(--bcs-gold-bright);
+  letter-spacing: 0.4px;
+  font-size: 1.05rem;
+  padding: 1.25rem 1.1rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.bcs-sidebar .nav-link {
+  color: var(--bs-secondary-color);
+  border-radius: 0;
+  margin: 2px 10px;
+  padding: 0.55rem 0.85rem;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.bcs-sidebar .nav-link:hover,
+.bcs-sidebar .nav-link.active {
+  background: rgba(57, 255, 20, 0.12);
+  color: var(--bcs-gold-bright);
+  transform: translateX(2px);
+}
+
+.bcs-sidebar .btn {
+  margin: 2px 10px;
+  width: calc(100% - 20px);
+  text-align: left;
+}
+
+.bcs-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Cards: gold-accented, animated entrance + hover lift ---------- */
+
+.card {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  animation: bcsFadeInUp 0.35s ease both;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(57, 255, 20, 0.45);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+}
+
+.card > .card-body > .card-title,
+.card h2 {
+  color: var(--bcs-gold-bright);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--bs-border-color);
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.container-fluid > .row > .col:nth-of-type(1) .card,
+.bcs-main .card:nth-of-type(1) { animation-delay: 0.02s; }
+.bcs-main .card:nth-of-type(2) { animation-delay: 0.08s; }
+.bcs-main .card:nth-of-type(3) { animation-delay: 0.14s; }
+.bcs-main .card:nth-of-type(4) { animation-delay: 0.2s; }
+.bcs-main .card:nth-of-type(5) { animation-delay: 0.26s; }
+
+@keyframes bcsFadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Buttons: gold gradient primary, subtle lift on hover ---------- */
+
+.btn {
+  border-radius: 0;
+  font-weight: 600;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-warning,
+.btn-primary {
+  background: linear-gradient(180deg, var(--bcs-gold-bright), var(--bs-primary));
+  border: none;
+  color: #04140a;
+}
+
+.btn-warning:hover,
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 14px rgba(57, 255, 20, 0.35);
+  color: #04140a;
+}
+
+.btn-outline-secondary {
+  border-color: var(--bcs-brown);
+  color: var(--bcs-gold-bright);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--bcs-brown);
+  color: #fff;
+  border-color: var(--bcs-brown);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, #e0563a, var(--bs-danger));
+  border: none;
+}
+
+.btn-sm.bcs-chip {
+  background: #0c1c0c;
+  border: 1px solid var(--bcs-brown);
+  color: var(--bcs-gold-bright);
+  border-radius: 0;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.btn-sm.bcs-chip:hover {
+  background: var(--bcs-brown);
+  color: #fff;
+}
+
+/* ---------- Forms ---------- */
+
+.form-control,
+.form-select {
+  background: #040a04;
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: #040a04;
+  border-color: var(--bs-primary);
+  color: var(--bs-body-color);
+  box-shadow: 0 0 0 0.2rem rgba(57, 255, 20, 0.18);
+}
+
+.form-control::placeholder {
+  color: #2f5a2f;
+}
+
+.form-label,
+label {
+  color: var(--bs-secondary-color);
+  font-size: 0.82rem;
+}
+
+/* ---------- Tables ---------- */
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-hover-bg: rgba(57, 255, 20, 0.06);
+  --bs-table-hover-color: var(--bs-body-color);
+  font-size: 0.88rem;
+}
+
+.table > thead {
+  color: var(--bcs-gold-bright);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ---------- Currency tiles ---------- */
+
+.bcs-currency-tile {
+  background: #0a160a;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0;
+  padding: 0.9rem 1rem;
+  height: 100%;
+}
+
+.bcs-currency-tile .name {
+  font-weight: 600;
+  color: var(--bcs-gold-bright);
+  font-size: 0.85rem;
+}
+
+.bcs-currency-tile .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 2px 0 10px;
+}
+
+/* ---------- Nav / feature cards ---------- */
+
+.bcs-nav-card {
+  display: block;
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0;
+  padding: 1rem 1.1rem;
+  color: var(--bs-body-color);
+  height: 100%;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.bcs-nav-card:hover {
+  border-color: var(--bs-primary);
+  transform: translateY(-2px);
+  color: var(--bs-body-color);
+}
+
+.bcs-nav-card .title {
+  color: var(--bcs-gold-bright);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.bcs-nav-card .hint {
+  color: var(--bs-secondary-color);
+  font-size: 0.82rem;
+}
+
+/* ---------- Code box (transfer/confirmation codes) ---------- */
+
+.bcs-code-box {
+  font-family: "Consolas", monospace;
+  font-size: 1.3rem;
+  background: #040a04;
+  border: 1px dashed var(--bs-primary);
+  border-radius: 0;
+  padding: 0.8rem 1rem;
+  text-align: center;
+  color: var(--bcs-gold-bright);
+  margin: 0.6rem 0;
+  letter-spacing: 2px;
+}
+
+/* ---------- Alerts (flash messages) ---------- */
+
+.alert {
+  animation: bcsFadeInUp 0.25s ease both;
+  border-width: 1px;
+}
+
+.alert-success {
+  background: rgba(57, 255, 20, 0.12);
+  border-color: var(--bs-success);
+  color: #baffba;
+}
+
+.alert-danger {
+  background: rgba(193, 68, 43, 0.12);
+  border-color: var(--bs-danger);
+  color: #f3c3ba;
+}
+
+/* ---------- Small helpers ---------- */
+
+.bcs-hint {
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.bcs-inline-form {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Dashed section dividers (used sparingly, for visual rhythm) ---------- */
+
+hr,
+.bcs-divider-dashed {
+  border: none;
+  border-top: 1px dashed var(--bs-border-color);
+  margin: 1.1rem 0;
+  opacity: 1;
+}
+
+.bcs-dashed-box {
+  border: 1px dashed var(--bs-border-color);
+  border-radius: 0;
+  padding: 0.9rem 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.bcs-dashed-box:hover {
+  border-color: var(--bs-primary);
+}
+
+/* =========================================================================
+   ASCII banner (trang Home)
+   ========================================================================= */
+
+.bcs-ascii-banner {
+  font-family: var(--bcs-mono);
+  color: var(--bs-primary);
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.35);
+  font-size: clamp(10px, 3.2vw, 15px);
+  line-height: 1.15;
+  white-space: pre;
+  overflow-x: auto;
+  margin: 0.5rem 0 0.15rem;
+  text-align: center;
+}
+
+.bcs-ascii-tagline {
+  font-family: var(--bcs-mono);
+  color: var(--bs-secondary-color);
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.bcs-cannon-row {
+  border-bottom: 1px dashed var(--bs-border-color);
+}
+
+.bcs-cannon-row:last-child {
+  border-bottom: none;
+}
+
+/* =========================================================================
+   Terminal window chrome — every .card gets a fake terminal title bar
+   (3 traffic-light dots) purely via CSS, no template changes needed.
+   ========================================================================= */
+
+.card {
+  position: relative;
+  padding-top: 1.9rem;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.9rem;
+  background: #081208;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0.72rem;
+  left: 0.9rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow: 16px 0 0 #febc2e, 32px 0 0 #28c840;
+}
+
+.card > .card-body {
+  padding-top: 0.85rem;
+}
+
+/* =========================================================================
+   Scanline overlay — faint CRT-style horizontal lines across the whole page.
+   Non-interactive, very low opacity so it doesn't hurt readability.
+   ========================================================================= */
+
+.bcs-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2000;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(57, 255, 20, 0.025) 0px,
+    rgba(57, 255, 20, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: normal;
+}
+
+/* =========================================================================
+   Status dot (sidebar brand) — small pulsing "online" indicator.
+   ========================================================================= */
+
+.bcs-status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bs-primary);
+  margin-right: 6px;
+  vertical-align: 1px;
+  animation: bcsPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes bcsPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.5); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px rgba(57, 255, 20, 0); }
+}
+
+/* =========================================================================
+   Command-center stat strip (dashboard top row)
+   ========================================================================= */
+
+.bcs-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--bs-border-color);
+  border: 1px solid var(--bs-border-color);
+  margin-bottom: 1.5rem;
+}
+
+.bcs-stat-tile {
+  background: #081208;
+  padding: 0.85rem 1rem;
+}
+
+.bcs-stat-tile .label {
+  font-family: var(--bcs-mono);
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
+.bcs-stat-tile .value {
+  font-family: var(--bcs-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--bs-primary);
+  margin-top: 2px;
+}
+
+/* =========================================================================
+   Responsive mobile — CSS THUẦN, tự thích nghi theo bề rộng màn hình thật,
+   không cần server đoán thiết bị. Dưới 768px: sidebar ẩn mặc định, chỉ còn
+   nút hamburger (3 gạch) góc trên trái; bấm vào trượt sidebar ra làm menu
+   phủ lên nội dung (off-canvas), có lớp nền mờ phía sau để bấm ra ngoài là
+   đóng lại.
+   ========================================================================= */
+
+.bcs-mobile-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 42px;
+  height: 42px;
+  background: #081208;
+  border: 1px solid var(--bs-border-color);
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1101;
+}
+
+.bcs-mobile-toggle span {
+  display: block;
+  height: 2px;
+  width: 20px;
+  margin: 0 auto;
+  background: var(--bs-primary);
+}
+
+.bcs-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1049;
+}
+
+@media (max-width: 767.98px) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .bcs-mobile-toggle {
+    display: flex;
+  }
+
+  .bcs-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+    width: 78vw;
+    max-width: 280px;
+    padding-top: 3.5rem;
+  }
+
+  .bcs-sidebar.bcs-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .bcs-sidebar-backdrop.bcs-backdrop-visible {
+    display: block;
+  }
+
+  .bcs-main {
+    width: 100%;
+  }
+
+  .bcs-content-pad {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 4rem !important; /* chừa chỗ cho nút hamburger cố định */
+  }
+
+  .card {
+    padding-top: 1.7rem;
+  }
+
+  .row > [class*="col-"] {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .btn {
+    min-height: 42px;
+  }
+
+  input.form-control,
+  select.form-select {
+    min-height: 42px;
+    font-size: 16px; /* ngăn iOS Safari tự zoom khi focus input */
+  }
+
+  table.table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .bcs-stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================================================
+   Tablet / cửa sổ desktop bị thu nhỏ: sidebar co gọn lại thay vì vỡ layout,
+   chưa đến mức ẩn hẳn sau hamburger (đó là hành vi của mốc 767px ở trên).
+   ========================================================================= */
+
+@media (min-width: 768px) and (max-width: 900px) {
+  .bcs-sidebar {
+    width: 68px;
+  }
+  .bcs-sidebar .nav-link span.bcs-label-full {
+    display: none;
+  }
+}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Get Save File{% endblock %}
+{% block content %}
+
+<pre class="bcs-ascii-banner" aria-hidden="true"> ___ _  _____ _____ _____ _    ___ 
+/ __| |/ /_ _|_   _|_   _| |  | __|
+\__ \ ' < | |  | |   | | | |__| _| 
+|___/_|\_\___| |_|   |_| |____|___|</pre>
+<div class="bcs-ascii-tagline">tool made by skittle</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Download save from account</h2>
+    <p class="bcs-hint">
+      In Battle Cats: Settings -> Data Transfer -> Begin Data Transfer to get a
+      Transfer Code and Confirmation Code. Each code can only be used once and
+      expires after a few minutes.
+    </p>
+
+    <form action="{{ url_for('download') }}" method="post" class="row g-3" id="download-form" onsubmit="handleDownloadSubmit()">
+      <div class="col-md-4">
+        <label for="transfer_code" class="form-label">Transfer Code</label>
+        <input type="text" class="form-control" id="transfer_code" name="transfer_code" required autofocus />
+      </div>
+      <div class="col-md-4">
+        <label for="confirmation_code" class="form-label">Confirmation Code</label>
+        <input type="text" class="form-control" id="confirmation_code" name="confirmation_code" required />
+      </div>
+      <div class="col-md-4">
+        <label for="country_code" class="form-label">Server / Country</label>
+        <select class="form-select" id="country_code" name="country_code">
+          <option value="en">EN (International)</option>
+          <option value="jp">JP (Japan)</option>
+          <option value="kr">KR (Korea)</option>
+          <option value="tw">TW (Taiwan)</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-warning" id="download-btn">Download Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function handleDownloadSubmit() {
+    var btn = document.getElementById('download-btn');
+    btn.disabled = true;
+    btn.textContent = 'Connecting to game server…';
+    // Khong return false - form van submit binh thuong, chi doi trang thai nut
+    // truoc khi trinh duyet dieu huong sang trang ket qua.
+  }
+</script>
+
+{% if accounts %}
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Or load a saved account</h2>
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Name</th><th>Path</th><th>Last modified</th><th></th></tr></thead>
+      <tbody>
+        {% for acc in accounts %}
+        <tr>
+          <td>{{ acc.name }}</td>
+          <td class="bcs-hint">{{ acc.path }}</td>
+          <td class="bcs-hint">{{ acc.modified or "—" }}</td>
+          <td>
+            <form action="{{ url_for('accounts_load') }}" method="post">
+              <input type="hidden" name="account_name" value="{{ acc.name }}" />
+              <button type="submit" class="btn btn-sm bcs-chip" {{ "disabled" if not acc.has_save }}>Load</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
