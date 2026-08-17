@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Items{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Currencies</h2>
+    <div class="row g-3">
+      {% for key, label in currency_labels.items() %}
+      <div class="col-md-4 col-lg-3">
+        <div class="bcs-currency-tile">
+          <div class="name">{{ label }}</div>
+          <div class="value">{{ "{:,}".format(currencies.get(key, 0)) }}</div>
+
+          <form action="{{ url_for('currency_add') }}" method="post" class="bcs-inline-form mb-2">
+            <input type="hidden" name="key" value="{{ key }}" />
+            <input type="number" name="amount" class="form-control form-control-sm" style="width:110px;" placeholder="Amount..." />
+            <button type="submit" class="btn btn-sm bcs-chip">Add</button>
+          </form>
+
+          <form action="{{ url_for('currency_set') }}" method="post" class="bcs-inline-form">
+            <input type="hidden" name="key" value="{{ key }}" />
+            <input type="number" name="value" class="form-control form-control-sm" style="width:110px;" placeholder="Set to..." />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Battle Items</h2>
+    <form action="{{ url_for('items_battle_items_save') }}" method="post">
+      <table class="table table-hover align-middle">
+        <thead><tr><th>Type</th><th>Quantity</th></tr></thead>
+        <tbody>
+          {% for i, (name, value) in battle_items %}
+          <tr>
+            <td>{{ name }}</td>
+            <td><input type="number" class="form-control form-control-sm" style="width:130px;" name="value_{{ i }}" value="{{ value }}" /></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-warning">Save Battle Items</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Other items</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <form action="{{ url_for('items_hundred_million') }}" method="post" class="bcs-inline-form">
+          <span class="bcs-hint">100M Downloads Tickets:</span>
+          <input type="number" name="value" class="form-control form-control-sm" style="width:100px;" value="{{ hundred_million }}" />
+          <button type="submit" class="btn btn-sm bcs-chip">Set</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <form action="{{ url_for('items_golden_cpu_reset') }}" method="post">
+          <button type="submit" class="btn btn-sm bcs-chip">Reset Golden Cat CPU Uses</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Item groups</h2>
+    <div class="row g-3">
+      {% for key, label in array_items.items() %}
+      <div class="col-md-4">
+        <a class="bcs-nav-card" href="{{ url_for('items_edit', key=key) }}">
+          <div class="title">{{ label }}</div>
+          <div class="hint">Edit quantity per type</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

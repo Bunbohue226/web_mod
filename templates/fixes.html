@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Fixes{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Clear tutorial state</h2>
+    <p class="bcs-hint">
+      Marks the in-game tutorial as completed and clears the very first
+      stage. Use this if a save is stuck showing the tutorial / intro
+      sequence instead of the normal game.
+    </p>
+    <form action="{{ url_for('fixes_clear_tutorial') }}" method="post" onsubmit="return confirm('Mark the tutorial as completed on this save?');">
+      <button type="submit" class="btn btn-warning">Clear Tutorial</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Fix Officer Pass crash</h2>
+    <p class="bcs-hint">
+      Resets Officer Pass / Gold Pass state. Use this if opening the Gold
+      Pass screen in-game crashes the app.
+    </p>
+    <form action="{{ url_for('fixes_officer_pass') }}" method="post">
+      <button type="submit" class="btn btn-warning">Fix Officer Pass Crash</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Unlock Equip Menu</h2>
+    <p class="bcs-hint">
+      Unlocks the Cat Equip / Special Skills menu if it's not showing up
+      yet in-game.
+    </p>
+    <form action="{{ url_for('fixes_unlock_equip_menu') }}" method="post">
+      <button type="submit" class="btn btn-warning">Unlock Equip Menu</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Roadmap</h2>
+    <p class="bcs-hint mb-0">
+      Not yet implemented: general save-corruption repair tools beyond the
+      fixes above.
+    </p>
+  </div>
+</div>
+{% endblock %}

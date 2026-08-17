@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="dark" data-bcs-theme="green">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -15,7 +15,17 @@
   <meta name="mobile-web-app-capable" content="yes" />
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+  <script>
+    // Ap dung theme da luu TRUOC khi trang ve xong, tranh nhap nhay 1 khung
+    // hinh theme mac dinh roi moi doi (FOUC).
+    (function () {
+      var saved = localStorage.getItem('bcs-theme');
+      if (saved) document.documentElement.setAttribute('data-bcs-theme', saved);
+    })();
+  </script>
 </head>
 <body>
   <div class="bcs-scanlines" aria-hidden="true"></div>
@@ -31,23 +41,36 @@
         <span class="bcs-status-dot" aria-hidden="true"></span>
         Battle Cats Save Editor
       </div>
-      <ul class="nav nav-pills flex-column mb-auto pt-2">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+      <ul class="nav nav-pills flex-column pt-2">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}"><i class="bi bi-house-door"></i> {{ "Home" if backend_loaded else "Login" }}</a></li>
         {% if backend_loaded %}
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Overview</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('cats_list') }}">Cats</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('story_list') }}">Story Chapters</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('ototo_page') }}">Ototo</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('other_maps_page') }}">Other Maps</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('items_hub') }}"><i class="bi bi-bag"></i> Items</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('cats_list') }}"><i class="bi bi-grid-3x3-gap"></i> Cats / Special Skills</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('levels_page') }}"><i class="bi bi-map"></i> Levels / Story / Treasure</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('ototo_page') }}"><i class="bi bi-gear"></i> Gamatoto / Ototo</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('accounts_list') }}"><i class="bi bi-person-badge"></i> Account</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('gacha_page') }}"><i class="bi bi-dice-5"></i> Gacha</a></li>
         {% endif %}
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('accounts_list') }}">Accounts</a></li>
       </ul>
-      {% if backend_loaded %}
-      <div class="mt-auto pb-3 d-flex gap-2 flex-wrap px-2">
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('save-form').submit();">Save File</button>
-        <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('upload-form').submit();">Upload</button>
+
+      <div class="mt-auto pb-3 px-2">
+        <div class="dropdown mb-2">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-palette"></i> Theme
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><button class="dropdown-item" type="button" onclick="bcsSetTheme('green')">Green (hacker)</button></li>
+            <li><button class="dropdown-item" type="button" onclick="bcsSetTheme('cyan')">Cyan</button></li>
+            <li><button class="dropdown-item" type="button" onclick="bcsSetTheme('light')">Light</button></li>
+          </ul>
+        </div>
+        {% if backend_loaded %}
+        <div class="d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('upload-form').submit();">Upload</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="if(confirm('Log out of this save? Any changes not saved/uploaded/saved to an account will be lost.')){document.getElementById('logout-form').submit();}">Logout</button>
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
 
     <div class="bcs-main">
@@ -65,8 +88,8 @@
     </div>
   </div>
 
-  <form id="save-form" action="{{ url_for('save_file') }}" method="post" class="d-none"></form>
   <form id="upload-form" action="{{ url_for('upload') }}" method="post" class="d-none"></form>
+  <form id="logout-form" action="{{ url_for('logout') }}" method="post" class="d-none"></form>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -90,6 +113,11 @@
       sidebar.querySelectorAll('a.nav-link').forEach(function (link) {
         link.addEventListener('click', closeSidebar);
       });
+    }
+
+    function bcsSetTheme(name) {
+      document.documentElement.setAttribute('data-bcs-theme', name);
+      localStorage.setItem('bcs-theme', name);
     }
 
     if ('serviceWorker' in navigator) {

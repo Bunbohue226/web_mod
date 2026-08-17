@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Gacha{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Gatya seeds</h2>
+    <p class="bcs-hint">
+      Each gatya "roll" is determined by an internal seed value. Editing
+      these does not add rare cats directly — it changes what the next
+      rolls will produce.
+    </p>
+    <form action="{{ url_for('gacha_seeds') }}" method="post" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Normal Gatya seed</label>
+        <input type="number" name="normal" class="form-control" value="{{ seeds.normal }}" />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Rare Gatya seed</label>
+        <input type="number" name="rare" class="form-control" value="{{ seeds.rare }}" />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Event Gatya seed</label>
+        <input type="number" name="event" class="form-control" value="{{ seeds.event }}" />
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-warning">Save Seeds</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

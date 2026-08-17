@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Other{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Playtime</h2>
+    <form action="{{ url_for('set_playtime') }}" method="post" class="bcs-inline-form">
+      <input type="number" name="hours" class="form-control form-control-sm" placeholder="Hours" style="width:90px;" value="{{ playtime.hours }}" />
+      <input type="number" name="minutes" class="form-control form-control-sm" placeholder="Min" style="width:85px;" value="{{ playtime.minutes }}" />
+      <input type="number" name="seconds" class="form-control form-control-sm" placeholder="Sec" style="width:85px;" value="{{ playtime.seconds }}" />
+      <button type="submit" class="btn btn-warning">Set playtime</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Unlocked Slots</h2>
+    <form action="{{ url_for('other_unlocked_slots') }}" method="post" class="bcs-inline-form">
+      <input type="number" name="count" class="form-control form-control-sm" style="width:100px;" value="{{ unlocked_slots }}" min="0" max="15" />
+      <button type="submit" class="btn btn-warning">Set</button>
+      <span class="bcs-hint">Number of cat lineup slots unlocked (0-15).</span>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Reset Wildcat Slots / Cat Scratcher Lottery</h2>
+    <p class="bcs-hint">Resets both gambling-style events so they can be used again.</p>
+    <form action="{{ url_for('other_reset_gambling') }}" method="post">
+      <button type="submit" class="btn btn-warning">Reset Events</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Restart Pack</h2>
+    <p class="bcs-hint">Applies the one-time "welcome back" restart pack reward flag.</p>
+    <form action="{{ url_for('other_restart_pack') }}" method="post">
+      <button type="submit" class="btn btn-warning">Apply Restart Pack</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title">Roadmap</h2>
+    <p class="bcs-hint mb-0">
+      Not yet implemented: Medals, Missions, Gold Pass, User Rank rewards,
+      Enemy Guide, Special Skills / Base Abilities.
+    </p>
+  </div>
+</div>
+{% endblock %}

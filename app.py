@@ -112,6 +112,8 @@ def require_loaded():
 
 @app.route("/", methods=["GET"])
 def index():
+    # "Login" (chưa đăng nhập) và "Home / Overview" (đã đăng nhập) giờ gộp
+    # làm một khái niệm: cùng 1 mục nav, tự chuyển nội dung theo trạng thái.
     if get_backend().is_loaded:
         return redirect(url_for("dashboard"))
     accounts = get_backend().list_accounts()
@@ -138,7 +140,31 @@ def download():
 @app.route("/accounts")
 def accounts_list():
     accounts = get_backend().list_accounts()
-    return render_template("accounts.html", accounts=accounts, root_dir=str(get_backend().ACCOUNTS_DIR))
+    inquiry_code = None
+    password_token = None
+    if get_backend().is_loaded:
+        inquiry_code = get_backend().get_inquiry_code()
+        password_token = get_backend().get_password_refresh_token()
+    return render_template(
+        "accounts.html",
+        accounts=accounts,
+        root_dir=str(get_backend().ACCOUNTS_DIR),
+        inquiry_code=inquiry_code,
+        password_token=password_token,
+    )
+
+
+@app.route("/accounts/inquiry_code", methods=["POST"])
+def accounts_inquiry_code():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        value = request.form.get("inquiry_code", "")
+        get_backend().set_inquiry_code(value)
+        flash("Inquiry Code updated.", "success")
+    except BackendError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("accounts_list"))
 
 
 @app.route("/accounts/save", methods=["POST"])
@@ -166,6 +192,15 @@ def accounts_load():
     return redirect(url_for("dashboard"))
 
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    """Đăng xuất khỏi save hiện tại (chỉ trong phiên trình duyệt này) — không
+    xoá file nào trên đĩa. Về lại Home để nhập mã hoặc load account khác."""
+    get_backend().unload()
+    flash("Logged out. Load a save or pick an account to continue.", "success")
+    return redirect(url_for("index"))
+
+
 # ---------------- Main dashboard ----------------
 
 
@@ -175,13 +210,7 @@ def dashboard():
         return redirect(url_for("index"))
     currencies = get_backend().get_currencies()
     playtime = get_backend().get_playtime()
-    return render_template(
-        "dashboard.html",
-        currencies=currencies,
-        currency_labels=CURRENCY_LABELS,
-        array_items=ARRAY_ITEM_DISPLAY,
-        playtime=playtime,
-    )
+    return render_template("dashboard.html", currencies=currencies, playtime=playtime)
 
 
 @app.route("/cats/bulk_unlock", methods=["POST"])
@@ -193,7 +222,7 @@ def bulk_unlock_cats():
         flash(f"Unlocked {count} new cat(s).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("cats_list"))
 
 
 @app.route("/cats/bulk_level", methods=["POST"])
@@ -207,7 +236,7 @@ def bulk_level_cats():
         flash(f"Updated level for {count} unlocked cat(s).", "success")
     except (BackendError, ValueError) as exc:
         flash(str(exc), "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("cats_list"))
 
 
 @app.route("/playtime/set", methods=["POST"])
@@ -228,12 +257,24 @@ def set_playtime():
 # ---------------- Story chapters ----------------
 
 
-@app.route("/story")
-def story_list():
+@app.route("/levels")
+def levels_page():
     if not get_backend().is_loaded:
         return redirect(url_for("index"))
     chapters = get_backend().get_story_chapters()
-    return render_template("story.html", chapters=chapters)
+    return render_template("levels.html", chapters=chapters)
+
+
+@app.route("/levels/filibuster", methods=["POST"])
+def levels_filibuster():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        get_backend().enable_filibuster_stage()
+        flash("Filibuster stage re-enabled.", "success")
+    except BackendError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/story/complete", methods=["POST"])
@@ -246,7 +287,7 @@ def story_complete():
         flash(f"Chapter #{chapter_index + 1} marked as completed.", "success")
     except (BackendError, ValueError) as exc:
         flash(str(exc), "error")
-    return redirect(url_for("story_list"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/story/treasure", methods=["POST"])
@@ -260,7 +301,7 @@ def story_treasure():
         flash(f"Collected treasure for chapter #{chapter_index + 1}.", "success")
     except (BackendError, ValueError) as exc:
         flash(str(exc), "error")
-    return redirect(url_for("story_list"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/story/complete_all", methods=["POST"])
@@ -272,7 +313,7 @@ def story_complete_all():
         flash(f"Completed all {count} chapters.", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("story_list"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/story/treasure_all", methods=["POST"])
@@ -285,7 +326,7 @@ def story_treasure_all():
         flash(f"Collected treasure for all {count} chapters.", "success")
     except (BackendError, ValueError) as exc:
         flash(str(exc), "error")
-    return redirect(url_for("story_list"))
+    return redirect(url_for("levels_page"))
 
 
 # ---------------- Ototo / Gamototo ----------------
@@ -298,9 +339,87 @@ def ototo_page():
     engineers = get_backend().get_engineers()
     materials = list(enumerate(get_backend().get_base_materials()))
     cannons = get_backend().get_cannons()
+    gamatoto_xp = get_backend().get_gamatoto_xp()
+    gamatoto_helpers = get_backend().get_gamatoto_helpers()
+    gamatoto_helper_options = get_backend().get_gamatoto_helper_options()
+    cat_shrine = get_backend().get_cat_shrine()
     return render_template(
-        "ototo.html", engineers=engineers, materials=materials, cannons=cannons
+        "ototo.html",
+        engineers=engineers,
+        materials=materials,
+        cannons=cannons,
+        gamatoto_xp=gamatoto_xp,
+        gamatoto_helpers=gamatoto_helpers,
+        gamatoto_helper_options=gamatoto_helper_options,
+        gamatoto_helpers_full=len(gamatoto_helpers) >= 10,
+        cat_shrine=cat_shrine,
     )
+
+
+@app.route("/ototo/gamatoto_xp", methods=["POST"])
+def ototo_gamatoto_xp():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        xp = int(request.form.get("xp", "0"))
+        get_backend().set_gamatoto_xp(xp)
+        flash(f"Gamatoto XP set to {xp:,}.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("ototo_page"))
+
+
+@app.route("/ototo/gamatoto_xp/add", methods=["POST"])
+def ototo_gamatoto_xp_add():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        amount = int(request.form.get("amount", "0"))
+        new_xp = get_backend().add_gamatoto_xp(amount)
+        flash(f"Gamatoto XP now {new_xp:,}.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("ototo_page"))
+
+
+@app.route("/ototo/gamatoto_helpers/add", methods=["POST"])
+def ototo_gamatoto_helpers_add():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        member_id = int(request.form.get("member_id", "0"))
+        get_backend().add_gamatoto_helper(member_id)
+        flash("Helper added.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("ototo_page"))
+
+
+@app.route("/ototo/gamatoto_helpers/remove", methods=["POST"])
+def ototo_gamatoto_helpers_remove():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        index = int(request.form.get("index", "-1"))
+        get_backend().remove_gamatoto_helper(index)
+        flash("Helper removed.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("ototo_page"))
+
+
+@app.route("/ototo/cat_shrine", methods=["POST"])
+def ototo_cat_shrine():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        xp_offering = int(request.form.get("xp_offering", "0"))
+        visible = request.form.get("visible") == "on"
+        get_backend().set_cat_shrine(xp_offering, visible)
+        flash("Cat Shrine updated.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("ototo_page"))
 
 
 @app.route("/ototo/engineers", methods=["POST"])
@@ -429,13 +548,6 @@ def cats_bulk_talents():
 # ---------------- Other map types (simple complete-all) ----------------
 
 
-@app.route("/other_maps")
-def other_maps_page():
-    if not get_backend().is_loaded:
-        return redirect(url_for("index"))
-    return render_template("other_maps.html")
-
-
 @app.route("/other_maps/gauntlets", methods=["POST"])
 def other_maps_gauntlets():
     if not require_loaded():
@@ -445,7 +557,7 @@ def other_maps_gauntlets():
         flash(f"Completed all Gauntlet stages ({count} stages).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("other_maps_page"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/other_maps/legend_quest", methods=["POST"])
@@ -457,7 +569,7 @@ def other_maps_legend_quest():
         flash(f"Completed all Legend Quest stages ({count} stages).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("other_maps_page"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/other_maps/zero_legends", methods=["POST"])
@@ -469,7 +581,7 @@ def other_maps_zero_legends():
         flash(f"Completed all Zero Legends stages ({count} stages).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("other_maps_page"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/other_maps/event_stages", methods=["POST"])
@@ -481,7 +593,7 @@ def other_maps_event_stages():
         flash(f"Completed all Event Stage groups ({count} groups).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("other_maps_page"))
+    return redirect(url_for("levels_page"))
 
 
 @app.route("/currency/add", methods=["POST"])
@@ -493,7 +605,7 @@ def currency_add():
         amount = int(request.form.get("amount", "0"))
     except ValueError:
         flash("Amount must be a whole number.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("items_hub"))
     try:
         current = get_backend().get_currencies()
         new_value = current.get(key, 0) + amount
@@ -502,7 +614,7 @@ def currency_add():
         flash(f"{CURRENCY_LABELS.get(key, key)} {sign}{amount:,} (now {new_value:,}).", "success")
     except BackendError as exc:
         flash(str(exc), "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("items_hub"))
 
 
 @app.route("/currency/set", methods=["POST"])
@@ -516,10 +628,64 @@ def currency_set():
         flash(f"{CURRENCY_LABELS.get(key, key)} set to {int(value):,}.", "success")
     except (BackendError, ValueError) as exc:
         flash(str(exc), "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("items_hub"))
 
 
 # ---------------- Array-type items ----------------
+
+
+@app.route("/items")
+def items_hub():
+    if not get_backend().is_loaded:
+        return redirect(url_for("index"))
+    currencies = get_backend().get_currencies()
+    return render_template(
+        "items_hub.html",
+        currencies=currencies,
+        currency_labels=CURRENCY_LABELS,
+        array_items=ARRAY_ITEM_DISPLAY,
+        battle_items=list(enumerate(get_backend().get_battle_items())),
+        hundred_million=get_backend().get_hundred_million_tickets(),
+    )
+
+
+@app.route("/items/battle_items/save", methods=["POST"])
+def items_battle_items_save():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        current = get_backend().get_battle_items()
+        values = [int(request.form.get(f"value_{i}", "0")) for i in range(len(current))]
+        get_backend().set_battle_items(values)
+        flash("Battle items updated.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("items_hub"))
+
+
+@app.route("/items/hundred_million", methods=["POST"])
+def items_hundred_million():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        value = int(request.form.get("value", "0"))
+        get_backend().set_hundred_million_tickets(value)
+        flash(f"100 Million Downloads Tickets set to {value:,}.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("items_hub"))
+
+
+@app.route("/items/golden_cpu_reset", methods=["POST"])
+def items_golden_cpu_reset():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        get_backend().reset_golden_cpu()
+        flash("Golden Cat CPU uses reset.", "success")
+    except BackendError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("items_hub"))
 
 
 @app.route("/items/<key>")
@@ -530,7 +696,7 @@ def items_edit(key: str):
         items = get_backend().get_array_item(key)
     except BackendError as exc:
         flash(str(exc), "error")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("items_hub"))
     return render_template(
         "items.html",
         key=key,
@@ -632,6 +798,32 @@ def upload():
 # đây là PWA hợp lệ và không hiện nút "Cài đặt ứng dụng").
 
 
+# ---------------- 8. Gacha ----------------
+
+
+@app.route("/gacha")
+def gacha_page():
+    if not get_backend().is_loaded:
+        return redirect(url_for("index"))
+    seeds = get_backend().get_gatya_seeds()
+    return render_template("gacha.html", seeds=seeds)
+
+
+@app.route("/gacha/seeds", methods=["POST"])
+def gacha_seeds():
+    if not require_loaded():
+        return redirect(url_for("index"))
+    try:
+        normal = int(request.form.get("normal", "0"))
+        rare = int(request.form.get("rare", "0"))
+        event = int(request.form.get("event", "0"))
+        get_backend().set_gatya_seeds(normal, rare, event)
+        flash("Gatya seeds updated.", "success")
+    except (BackendError, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("gacha_page"))
+
+
 @app.route("/service-worker.js")
 def service_worker():
     from flask import Response
@@ -684,6 +876,41 @@ def _get_lan_ip() -> str:
     return ip
 
 
+MDNS_HOSTNAME = "battlecats-editor.local"
+
+
+def _register_mdns(lan_ip: str, port: int):
+    """Đăng ký hostname cố định qua mDNS (Bonjour/Zeroconf) — địa chỉ IP thật
+    của máy LUÔN đổi mỗi khi bạn nối vào 1 mạng wifi khác (router mới cấp
+    phát IP mới), không có cách nào ép "1 IP cố định mãi mãi" từ phía ứng
+    dụng — đó là giới hạn thật của DHCP, không phải hạn chế của tool. Cách
+    thực tế nhất để có 1 ĐỊA CHỈ không đổi: dùng TÊN thay vì IP. mDNS làm
+    đúng việc đó — http://battlecats-editor.local:5000 sẽ luôn trỏ đúng
+    tới máy này, dù IP thật bên dưới là gì, MIỄN LÀ điện thoại và máy tính
+    đang cùng 1 mạng LAN (yêu cầu này giống hệt yêu cầu khi dùng IP thường).
+
+    Trả về đối tượng Zeroconf để giữ sống suốt vòng đời server, hoặc None
+    nếu đăng ký thất bại (không có thư viện, hoặc lỗi mạng) — best-effort,
+    không được làm crash cả server chỉ vì mDNS lỗi."""
+    try:
+        import socket
+
+        from zeroconf import Zeroconf, ServiceInfo
+
+        zc = Zeroconf()
+        info = ServiceInfo(
+            "_http._tcp.local.",
+            "Battle Cats Save Editor._http._tcp.local.",
+            addresses=[socket.inet_aton(lan_ip)],
+            port=port,
+            server=MDNS_HOSTNAME + ".",
+        )
+        zc.register_service(info)
+        return zc
+    except Exception:
+        return None
+
+
 if __name__ == "__main__":
     BattleCatsBackend.ACCOUNTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -701,5 +928,9 @@ if __name__ == "__main__":
 
     port = 5000
     lan_ip = _get_lan_ip()
-    print(f"🚀 Server running: http://{lan_ip}:{port}")
+    mdns_handle = _register_mdns(lan_ip, port)
+    if mdns_handle is not None:
+        print(f"🚀 Server running: http://{lan_ip}:{port}  (stable: http://{MDNS_HOSTNAME}:{port})")
+    else:
+        print(f"🚀 Server running: http://{lan_ip}:{port}")
     app.run(host="0.0.0.0", port=port, debug=False)

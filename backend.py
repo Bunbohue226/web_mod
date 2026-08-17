@@ -114,6 +114,15 @@ class BattleCatsBackend:
         if self._save_file is None:
             raise BackendError("Chưa load save file nào.")
 
+    def unload(self) -> None:
+        """Đăng xuất (logout) khỏi save hiện tại trong phiên này. CHỈ xoá
+        khỏi bộ nhớ — không đụng tới bất kỳ file nào trên đĩa (account đã
+        lưu vẫn còn nguyên, có thể load lại bất cứ lúc nào). Thay đổi CHƯA
+        lưu ra file/account/upload sẽ mất — phần xác nhận (confirm) nằm ở
+        giao diện, không phải ở đây."""
+        self._save_file = None
+        self._loaded_path = None
+
     # ---------- Tải save bằng mã Transfer / Confirmation (nhập mã lấy tài khoản) ----------
     # Đây chính là cơ chế "Chuyển dữ liệu sang máy mới" mà game Battle Cats cung cấp
     # sẵn (Settings -> Data Transfer -> Begin Data Transfer). Ta chỉ gọi lại đúng
@@ -271,9 +280,29 @@ class BattleCatsBackend:
             raise BackendError("Số kỹ sư không được âm.")
         self._save_file.ototo.engineers = count
 
-    def get_base_materials(self) -> list[int]:
+    def get_base_materials(self) -> list[tuple[str, int]]:
         self._require_loaded()
-        return [m.amount for m in self._save_file.ototo.base_materials.materials]
+        materials = self._save_file.ototo.base_materials.materials
+        names = self._try_get_material_names(len(materials))
+        return list(zip(names, [m.amount for m in materials]))
+
+    def _try_get_material_names(self, count: int) -> list[str]:
+        fallback = [f"Material #{i}" for i in range(count)]
+        try:
+            names_obj = core.core_data.get_gatya_item_names(self._save_file)
+            items = core.core_data.get_gatya_item_buy(self._save_file).get_by_category(7)
+            if not items:
+                return fallback
+            result = []
+            for i in range(count):
+                if i < len(items):
+                    name = names_obj.get_name(items[i].id)
+                    result.append(name if name else fallback[i])
+                else:
+                    result.append(fallback[i])
+            return result
+        except Exception:
+            return fallback
 
     def set_base_materials(self, values: list[int]) -> None:
         self._require_loaded()
@@ -283,18 +312,223 @@ class BattleCatsBackend:
         for m, v in zip(materials, values):
             m.amount = int(v)
 
+    # ---------- Battle Items / 100M Tickets / Golden CPU / Restart Pack (mục Items) ----------
+
+    BATTLE_ITEM_NAMES = [
+        "Speed Up", "Treasure Radar", "Rich Cat", "Cat CPU", "Cat Jobs", "Sniper the Cat",
+    ]
+
+    def get_battle_items(self) -> list[tuple[str, int]]:
+        self._require_loaded()
+        items = self._save_file.battle_items.items
+        names = self.BATTLE_ITEM_NAMES
+        return [
+            (names[i] if i < len(names) else f"Battle Item #{i}", item.amount)
+            for i, item in enumerate(items)
+        ]
+
+    def set_battle_items(self, values: list[int]) -> None:
+        self._require_loaded()
+        items = self._save_file.battle_items.items
+        if len(values) != len(items):
+            raise BackendError("Số lượng giá trị không khớp.")
+        for item, v in zip(items, values):
+            item.amount = int(v)
+
+    def get_hundred_million_tickets(self) -> int:
+        self._require_loaded()
+        return self._save_file.hundred_million_ticket
+
+    def set_hundred_million_tickets(self, value: int) -> None:
+        self._require_loaded()
+        self._save_file.hundred_million_ticket = int(value)
+
+    def reset_golden_cpu(self) -> None:
+        self._require_loaded()
+        self._save_file.golden_cpu_count = 0
+
+    def apply_restart_pack(self) -> None:
+        self._require_loaded()
+        self._save_file.restart_pack = 1
+
+    # ---------- Account: Inquiry Code / Password Refresh Token (mục Account) ----------
+    # Password Refresh Token là 1 dạng thông tin xác thực tài khoản — CHỈ hiển
+    # thị để bạn tự sao lưu, không cho sửa tuỳ ý (sửa sai sẽ chỉ làm hỏng khả
+    # năng xác thực, không có giá trị "cheat" nào, nên không cần route set).
+
+    def get_inquiry_code(self) -> str:
+        self._require_loaded()
+        return str(self._save_file.inquiry_code)
+
+    def set_inquiry_code(self, value: str) -> None:
+        self._require_loaded()
+        self._save_file.inquiry_code = value
+
+    def get_password_refresh_token(self) -> str:
+        self._require_loaded()
+        return str(self._save_file.password_refresh_token)
+
+    # ---------- Levels: Re-enable Filibuster Stage ----------
+
+    def enable_filibuster_stage(self) -> None:
+        self._require_loaded()
+        import random
+
+        self._save_file.filibuster_stage_enabled = True
+        self._save_file.filibuster_stage_id = random.randint(0, 47)
+
+    # ---------- Gamatoto XP / Helpers / Cat Shrine (mục "6. Gamatoto / Ototo") ----------
+
+    def get_gamatoto_xp(self) -> int:
+        self._require_loaded()
+        return self._save_file.gamatoto.xp
+
+    def set_gamatoto_xp(self, xp: int) -> None:
+        self._require_loaded()
+        self._save_file.gamatoto.xp = int(xp)
+
+    def add_gamatoto_xp(self, amount: int) -> int:
+        self._require_loaded()
+        new_xp = max(0, self._save_file.gamatoto.xp + int(amount))
+        self._save_file.gamatoto.xp = new_xp
+        return new_xp
+
+    MAX_GAMATOTO_HELPERS = 10
+
+    def _get_gamatoto_members_names(self):
+        """Cố tải danh sách thật các phụ tá Gamatoto (tên + rank + bonus) từ
+        dữ liệu game. Cần internet; nếu thất bại trả về None (gọi nơi dùng
+        phải tự xử lý fallback, không được để vỡ chức năng)."""
+        try:
+            from bcsfe.core.game.gamoto.gamatoto import GamatotoMembersName
+
+            names = GamatotoMembersName(self._save_file)
+            return names if names.members else None
+        except Exception:
+            return None
+
+    def get_gamatoto_helpers(self) -> list[dict]:
+        self._require_loaded()
+        helpers = self._save_file.gamatoto.helpers.helpers
+        names_data = self._get_gamatoto_members_names()
+        result = []
+        for i, h in enumerate(helpers):
+            entry = {"index": i, "id": h.id, "name": f"Helper #{h.id}", "rarity_name": "", "bonus": None}
+            if names_data is not None:
+                member = names_data.get_member(h.id)
+                if member is not None:
+                    entry["name"] = member.name
+                    entry["rarity_name"] = member.rarity_name
+                    entry["bonus"] = member.bonus
+            result.append(entry)
+        return result
+
+    def get_gamatoto_helper_options(self) -> list[dict]:
+        """Danh sách TẤT CẢ phụ tá có thể thêm (tên + rank + bonus), dùng cho
+        dropdown "Add Helper". Rỗng nếu không tải được dữ liệu game (không
+        internet) — khi đó giao diện sẽ tự chuyển sang nhập ID tay."""
+        self._require_loaded()
+        names_data = self._get_gamatoto_members_names()
+        if names_data is None or names_data.members is None:
+            return []
+        return [
+            {"id": m.member_id, "name": m.name, "rarity_name": m.rarity_name, "bonus": m.bonus}
+            for m in names_data.members
+        ]
+
+    def add_gamatoto_helper(self, member_id: int) -> None:
+        self._require_loaded()
+        helpers = self._save_file.gamatoto.helpers.helpers
+        if len(helpers) >= self.MAX_GAMATOTO_HELPERS:
+            raise BackendError(f"Đã đạt tối đa {self.MAX_GAMATOTO_HELPERS} phụ tá.")
+        from bcsfe.core.game.gamoto.gamatoto import Helper
+
+        helpers.append(Helper(int(member_id)))
+
+    def remove_gamatoto_helper(self, index: int) -> None:
+        self._require_loaded()
+        helpers = self._save_file.gamatoto.helpers.helpers
+        if index < 0 or index >= len(helpers):
+            raise BackendError("Không tìm thấy phụ tá ở vị trí này.")
+        helpers.pop(index)
+
+    def get_cat_shrine(self) -> dict:
+        self._require_loaded()
+        cs = self._save_file.cat_shrine
+        return {"xp_offering": cs.xp_offering, "visible": not cs.shrine_gone}
+
+    def set_cat_shrine(self, xp_offering: int, visible: bool) -> None:
+        self._require_loaded()
+        cs = self._save_file.cat_shrine
+        cs.xp_offering = int(xp_offering)
+        if visible:
+            cs.appear()
+        else:
+            cs.disappear()
+
+    # ---------- Thêm cho mục "9. Fixes" ----------
+
+    def fix_officer_pass_crash(self) -> None:
+        self._require_loaded()
+        self._save_file.officer_pass.reset(self._save_file)
+
+    def unlock_equip_menu(self) -> None:
+        self._require_loaded()
+        self._save_file.unlock_equip_menu()
+
+    # ---------- Mục "10. Other" bổ sung ----------
+
+    def get_unlocked_slots(self) -> int:
+        self._require_loaded()
+        return self._save_file.lineups.unlocked_slots
+
+    def set_unlocked_slots(self, count: int) -> None:
+        self._require_loaded()
+        if count < 0 or count > 15:
+            raise BackendError("Số slot phải trong khoảng 0-15.")
+        self._save_file.lineups.unlocked_slots = int(count)
+
+    def reset_gambling_events(self) -> None:
+        """Reset Wildcat Slots và Cat Scratcher Lottery (dùng lại được như mới)."""
+        self._require_loaded()
+        self._save_file.wildcat_slots.reset()
+        self._save_file.cat_scratcher.reset()
+
     def get_cannons(self) -> list[dict]:
         self._require_loaded()
         cannons = self._save_file.ototo.cannons
         if cannons is None:
             return []
+        descriptions = None
+        try:
+            from bcsfe.core.game.gamoto.ototo import CannonDescriptions
+
+            descriptions = CannonDescriptions(self._save_file)
+        except Exception:
+            descriptions = None
+
         result = []
         for cannon_id, cannon in sorted(cannons.cannons.items()):
+            name = f"Cannon #{cannon_id}"
+            part_names = [f"Part {i}" for i in range(len(cannon.levels))]
+            if descriptions is not None:
+                try:
+                    desc = descriptions.get_cannon_description(cannon_id)
+                    if desc is not None:
+                        name = desc.get_cannon_name() or name
+                        part_names = [
+                            desc.get_part_name(i) or part_names[i]
+                            for i in range(len(cannon.levels))
+                        ]
+                except Exception:
+                    pass
             result.append(
                 {
                     "id": cannon_id,
+                    "name": name,
                     "development": cannon.development,
                     "levels": list(cannon.levels),
+                    "part_names": part_names,
                 }
             )
         return result
@@ -407,6 +641,29 @@ class BattleCatsBackend:
         for t in range(num_types):
             event_stages.clear_group(t, True)
         return num_types
+
+    # ---------- Gacha: gatya seed (mục "8. Gacha") ----------
+    # save_file.gatya.{normal_seed,rare_seed,event_seed} là int thuần.
+
+    def get_gatya_seeds(self) -> dict:
+        self._require_loaded()
+        g = self._save_file.gatya
+        return {"normal": g.normal_seed, "rare": g.rare_seed, "event": g.event_seed}
+
+    def set_gatya_seeds(self, normal: int, rare: int, event: int) -> None:
+        self._require_loaded()
+        g = self._save_file.gatya
+        g.normal_seed = int(normal)
+        g.rare_seed = int(rare)
+        g.event_seed = int(event)
+
+    # ---------- Fixes (mục "9. Fixes") ----------
+    # core.StoryChapters.clear_tutorial(save_file) là staticmethod thuần,
+    # không qua dialog — dùng để sửa lỗi save bị kẹt ở màn hình tutorial.
+
+    def clear_tutorial(self) -> None:
+        self._require_loaded()
+        core.StoryChapters.clear_tutorial(self._save_file)
 
     # ---------- Accounts folder management ----------
     # Save/load save files into named subfolders under ACCOUNTS_DIR, e.g.

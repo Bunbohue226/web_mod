@@ -4,6 +4,89 @@
 
 <div class="card mb-4">
   <div class="card-body">
+    <h2 class="card-title">Gamatoto XP / Level</h2>
+    <div class="d-flex flex-wrap gap-3">
+      <form action="{{ url_for('ototo_gamatoto_xp_add') }}" method="post" class="bcs-inline-form">
+        <input type="number" name="amount" class="form-control form-control-sm" style="width:110px;" placeholder="Amount..." />
+        <button type="submit" class="btn btn-sm bcs-chip">Add</button>
+      </form>
+      <form action="{{ url_for('ototo_gamatoto_xp') }}" method="post" class="bcs-inline-form">
+        <span class="bcs-hint">Current: {{ "{:,}".format(gamatoto_xp) }}</span>
+        <input type="number" name="xp" class="form-control form-control-sm" style="width:120px;" placeholder="Set to..." />
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+      </form>
+    </div>
+    <p class="bcs-hint mt-2 mb-0">Gamatoto's level is derived from this XP value by the game.</p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Gamatoto Helpers ({{ gamatoto_helpers|length }} / 10)</h2>
+
+    {% if gamatoto_helpers %}
+    <table class="table table-hover align-middle mb-3">
+      <thead><tr><th>Name</th><th>Rank</th><th>Bonus</th><th></th></tr></thead>
+      <tbody>
+        {% for h in gamatoto_helpers %}
+        <tr>
+          <td>{{ h.name }}</td>
+          <td>{{ h.rarity_name or "—" }}</td>
+          <td>{{ h.bonus if h.bonus is not none else "—" }}</td>
+          <td>
+            <form action="{{ url_for('ototo_gamatoto_helpers_remove') }}" method="post">
+              <input type="hidden" name="index" value="{{ h.index }}" />
+              <button type="submit" class="btn btn-sm btn-outline-secondary">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="bcs-hint">No helpers assigned yet.</p>
+    {% endif %}
+
+    {% if not gamatoto_helpers_full %}
+      {% if gamatoto_helper_options %}
+      <form action="{{ url_for('ototo_gamatoto_helpers_add') }}" method="post" class="bcs-inline-form">
+        <select name="member_id" class="form-select form-select-sm" style="width:320px;">
+          {% for opt in gamatoto_helper_options %}
+          <option value="{{ opt.id }}">{{ opt.name }} ({{ opt.rarity_name }}{% if opt.bonus is not none %}, bonus {{ opt.bonus }}{% endif %})</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm bcs-chip">Add Helper</button>
+      </form>
+      {% else %}
+      <p class="bcs-hint mb-2">Couldn't load helper names from the game (needs internet on first use). Add by ID instead:</p>
+      <form action="{{ url_for('ototo_gamatoto_helpers_add') }}" method="post" class="bcs-inline-form">
+        <input type="number" name="member_id" class="form-control form-control-sm" style="width:120px;" placeholder="Helper ID" required />
+        <button type="submit" class="btn btn-sm bcs-chip">Add Helper</button>
+      </form>
+      {% endif %}
+    {% else %}
+    <p class="bcs-hint mb-0">Maximum of 10 helpers reached — remove one to add another.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Cat Shrine</h2>
+    <form action="{{ url_for('ototo_cat_shrine') }}" method="post" class="bcs-inline-form">
+      <span class="bcs-hint">XP Offering:</span>
+      <input type="number" name="xp_offering" class="form-control form-control-sm" style="width:120px;" value="{{ cat_shrine.xp_offering }}" />
+      <div class="form-check ms-2">
+        <input type="checkbox" class="form-check-input" id="shrineVisible" name="visible" {{ "checked" if cat_shrine.visible }} />
+        <label class="form-check-label bcs-hint" for="shrineVisible">Shrine visible</label>
+      </div>
+      <button type="submit" class="btn btn-warning">Save Shrine</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
     <h2 class="card-title">Engineers</h2>
     <form action="{{ url_for('ototo_engineers') }}" method="post" class="bcs-inline-form">
       <input type="number" name="count" class="form-control form-control-sm" style="width:100px;" value="{{ engineers.current }}" />
@@ -20,9 +103,9 @@
       <table class="table table-hover align-middle">
         <thead><tr><th>Type</th><th>Quantity</th></tr></thead>
         <tbody>
-          {% for i, value in materials %}
+          {% for i, (name, value) in materials %}
           <tr>
-            <td>Material #{{ i }}</td>
+            <td>{{ name }}</td>
             <td><input type="number" class="form-control form-control-sm" style="width:130px;" name="value_{{ i }}" value="{{ value }}" /></td>
           </tr>
           {% endfor %}
@@ -42,16 +125,16 @@
       <input type="hidden" name="cannon_id" value="{{ cannon.id }}" />
       <div class="d-flex flex-wrap gap-3 align-items-end">
         <div>
-          <label class="form-label mb-0">Cannon #{{ cannon.id }} — development stage</label>
+          <label class="form-label mb-0">{{ cannon.name }} — development stage</label>
           <input type="number" name="development" class="form-control form-control-sm" style="width:100px;" value="{{ cannon.development }}" />
         </div>
         {% for lvl in cannon.levels %}
         <div>
-          <label class="form-label mb-0">Part {{ loop.index0 }} level</label>
+          <label class="form-label mb-0">{{ cannon.part_names[loop.index0] }} level</label>
           <input type="number" name="level_{{ loop.index0 }}" class="form-control form-control-sm" style="width:90px;" value="{{ lvl }}" />
         </div>
         {% endfor %}
-        <button type="submit" class="btn btn-sm bcs-chip">Save Cannon #{{ cannon.id }}</button>
+        <button type="submit" class="btn btn-sm bcs-chip">Save {{ cannon.name }}</button>
       </div>
     </form>
     {% endfor %}

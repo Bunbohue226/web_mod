@@ -6,6 +6,9 @@
   <div class="card-body">
     <h2 class="card-title">Bulk actions — all unlocked cats</h2>
     <div class="d-flex flex-wrap gap-2">
+      <form action="{{ url_for('bulk_unlock_cats') }}" method="post" onsubmit="return confirm('Unlock EVERY cat in this save?');">
+        <button type="submit" class="btn btn-warning">Unlock ALL cats</button>
+      </form>
       <form action="{{ url_for('cats_bulk_true_form') }}" method="post" onsubmit="return confirm('Force True Form for EVERY unlocked cat?');">
         <button type="submit" class="btn btn-warning">Force True Form (ALL)</button>
       </form>
@@ -16,6 +19,12 @@
         <button type="submit" class="btn btn-warning">Max Talents (ALL)</button>
       </form>
     </div>
+    <form action="{{ url_for('bulk_level_cats') }}" method="post" class="bcs-inline-form mt-3" onsubmit="return confirm('Set the level of EVERY unlocked cat? This overwrites individual levels.');">
+      <span class="bcs-hint">Set level for ALL unlocked cats:</span>
+      <input type="number" name="base" class="form-control form-control-sm" placeholder="Base" style="width:80px;" required />
+      <input type="number" name="plus" class="form-control form-control-sm" placeholder="Plus" style="width:80px;" value="0" />
+      <button type="submit" class="btn btn-warning">Apply to all cats</button>
+    </form>
     <p class="bcs-hint mt-2 mb-0">
       "Force" ignores whether you've seen the cat's evolution image in-game.
       "Max Talents" needs an internet connection to fetch real talent caps.
@@ -26,7 +35,8 @@
 <div class="card">
   <div class="card-body">
     <h2 class="card-title">Cat list ({{ cats|length }})</h2>
-    <table class="table table-hover align-middle mb-0">
+    <input type="text" id="catSearchBox" class="form-control mb-3" placeholder="Search by cat ID..." style="max-width:260px;" oninput="bcsFilterCats(this.value)" />
+    <table class="table table-hover align-middle mb-0" id="catsTable">
       <thead>
         <tr>
           <th>ID</th><th>Unlocked</th><th>Form</th><th>Level</th><th>Actions</th>
@@ -34,7 +44,7 @@
       </thead>
       <tbody>
         {% for cat in cats %}
-        <tr>
+        <tr data-cat-id="{{ cat.id }}">
           <td>{{ cat.id }}</td>
           <td>{{ "Yes" if cat.unlocked else "No" }}</td>
           <td>{{ cat.current_form }} / {{ cat.unlocked_forms }}</td>
@@ -73,4 +83,15 @@
     </table>
   </div>
 </div>
+
+<script>
+  function bcsFilterCats(query) {
+    var q = query.trim();
+    var rows = document.querySelectorAll('#catsTable tbody tr');
+    rows.forEach(function (row) {
+      var id = row.getAttribute('data-cat-id') || '';
+      row.style.display = (q === '' || id.indexOf(q) !== -1) ? '' : 'none';
+    });
+  }
+</script>
 {% endblock %}

@@ -64,6 +64,12 @@ def ensure_all() -> None:
     # làm nguồn tham chiếu riêng nữa — xem PACKAGING.md để đóng gói .exe).
     ensure_installed("flask", "flask==3.1.3")
     ensure_installed("bcsfe", "bcsfe==3.6.0")
+    # zeroconf chỉ phục vụ tính năng "hostname ổn định" (mDNS) — KHÔNG bắt
+    # buộc để app chạy được, nên lỗi cài đặt ở đây không nên chặn cả app.
+    try:
+        ensure_installed("zeroconf", "zeroconf")
+    except Exception:
+        print("[setup] Không cài được 'zeroconf' — bỏ qua tính năng hostname ổn định (.local).")
 
 
 if __name__ == "__main__":

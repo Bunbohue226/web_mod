@@ -2,6 +2,23 @@
 {% block title %}Accounts{% endblock %}
 {% block content %}
 
+{% if inquiry_code is not none %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="card-title">Account identifiers</h2>
+    <form action="{{ url_for('accounts_inquiry_code') }}" method="post" class="bcs-inline-form mb-3">
+      <span class="bcs-hint">Inquiry Code:</span>
+      <input type="text" name="inquiry_code" class="form-control form-control-sm" style="width:260px;" value="{{ inquiry_code }}" />
+      <button type="submit" class="btn btn-sm bcs-chip">Save</button>
+    </form>
+    <div>
+      <span class="bcs-hint">Password Refresh Token (read-only — this is an auth credential, back it up but don't share it):</span>
+      <div class="bcs-code-box" style="font-size:0.85rem; word-break:break-all;">{{ password_token }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="card mb-4">
   <div class="card-body">
     <h2 class="card-title">Saved accounts</h2>
